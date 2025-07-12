@@ -14,8 +14,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB - handle connection asynchronously
+connectDB().catch((error) => {
+  console.error('Failed to connect to MongoDB:', error);
+  // Continue running server even if DB connection fails initially
+});
 
 // Security middleware
 app.use(helmet());
@@ -52,7 +55,21 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    database: 'Connected',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Simple root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'QR Code Generator API is running!',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      qrcode: '/api/qrcode'
+    }
   });
 });
 
